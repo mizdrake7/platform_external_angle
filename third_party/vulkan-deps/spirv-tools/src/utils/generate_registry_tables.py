@@ -14,9 +14,10 @@
 # limitations under the License.
 """Generates the vendor tool table from the SPIR-V XML registry."""
 
+import argparse
 import errno
 import io
-import os.path
+import os
 from xml.etree.ElementTree import XML, XMLParser, TreeBuilder
 
 
@@ -68,24 +69,23 @@ def generate_vendor_table(registry):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description=
-                                     'Generate tables from SPIR-V XML registry')
-    parser.add_argument('--xml', metavar='<path>',
-                        type=str, required=True,
-                        help='SPIR-V XML Registry file')
-    parser.add_argument('--generator-output', metavar='<path>',
-                        type=str, required=True,
-                        help='output file for SPIR-V generators table')
+    parser = argparse.ArgumentParser(description='Generate tables from SPIR-V XML registry')
+    parser.add_argument('--xml', metavar='<path>', type=str, required=True, help='SPIR-V XML Registry file')
+    parser.add_argument('--generator-output', metavar='<path>', type=str, required=True, help='output file for SPIR-V generators table')
     args = parser.parse_args()
 
-    with io.open(args.xml, encoding='utf-8') as xml_in:
-      parser = XMLParser(target=TreeBuilder(), encoding='utf-8')
-      registry = XML(xml_in.read(), parser=parser)
+    with open(args.xml, 'rb') as xml_in:
+        xml_content = xml_in.read().decode('utf-8')
 
-    mkdir_p(os.path.dirname(args.generator_output))
+    parser = XMLParser(target=TreeBuilder(), encoding='utf-8')
+    registry = XML(xml_content.encode('utf-8'), parser=parser)
+
+    output_dir = os.path.dirname(args.generator_output)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     with open(args.generator_output, 'w') as f:
-      f.write(generate_vendor_table(registry))
+        f.write(generate_vendor_table(registry))
 
 
 if __name__ == '__main__':
